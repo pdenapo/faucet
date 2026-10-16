@@ -12,7 +12,7 @@ import (
  */
 
 func (s *Server) setupCustomRoutes() {
-	s.router.Get("/_/*", customSPAHandler("./frontend/dist", "/_"))
+	s.router.Get("/_/*", customSPAHandler("../frontend/dist", "/_"))
 }
 
 // customSPAHandler serves static files or falls back to index.html for client-side routes
@@ -20,6 +20,7 @@ func customSPAHandler(staticDir string, basePrefix string) http.HandlerFunc {
 	fileServer := http.FileServer(http.Dir(staticDir))
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		println("customSPAHandler")
 		// Normalize the path by removing the prefix if it exists (e.g., "/_/")
 		p := r.URL.Path
 		if basePrefix != "" && strings.HasPrefix(p, basePrefix) {
@@ -28,6 +29,7 @@ func customSPAHandler(staticDir string, basePrefix string) http.HandlerFunc {
 
 		// Build the full path to the file inside the distribution directory
 		fullPath := filepath.Join(staticDir, filepath.Clean(p))
+		println("fullpath=", fullPath)
 
 		// Check if the file exists and is not a directory
 		info, err := os.Stat(fullPath)
@@ -35,6 +37,8 @@ func customSPAHandler(staticDir string, basePrefix string) http.HandlerFunc {
 			// Serve the static file (JS, CSS, images, etc.)
 			http.StripPrefix(basePrefix, fileServer).ServeHTTP(w, r)
 			return
+		} else {
+			println(err)
 		}
 
 		// If the file does not exist, respond with index.html so the SPA can handle the route
